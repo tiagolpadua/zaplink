@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -13,9 +15,6 @@ class ZapLinkApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Zap Link',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.greenAccent),
-      ),
       home: const ZapLinkPage(title: 'Zap Link'),
     );
   }
@@ -31,7 +30,7 @@ class ZapLinkPage extends StatefulWidget {
 }
 
 class _ZapLinkPageState extends State<ZapLinkPage> {
-  Uri? _toLaunch;
+  Uri? _uri;
 
   final _phoneNumberController = TextEditingController();
 
@@ -58,7 +57,7 @@ class _ZapLinkPageState extends State<ZapLinkPage> {
     }
 
     setState(() {
-      _toLaunch = toLaunch;
+      _uri = toLaunch;
     });
   }
 
@@ -72,7 +71,7 @@ class _ZapLinkPageState extends State<ZapLinkPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Color(0xFF367754),
         title: Center(
           child: Text(
             widget.title,
@@ -83,50 +82,130 @@ class _ZapLinkPageState extends State<ZapLinkPage> {
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _phoneNumberController,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Digite o número do WhatsApp',
+      body: Container(
+        color: Color.fromARGB(255, 223, 240, 232),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      textAlign: TextAlign.center,
+                      controller: _phoneNumberController,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.delete),
+                          iconSize: 40,
+                          onPressed: () {
+                            setState(() {
+                              _phoneNumberController.clear();
+                              _uri = null;
+                            });
+                          },
+                        ),
+                      ),
+                      style: const TextStyle(
+                        fontSize: 28,
+                      ), // Increased font size
+                      onChanged: (text) {
+                        updatePhone(text);
+                      },
                     ),
-                    onChanged: (text) {
-                      updatePhone(text);
-                    },
                   ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  iconSize: 35,
-                  onPressed: () {
-                    setState(() {
-                      _phoneNumberController.clear();
-                    });
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            IconButton(
-              icon: const FaIcon(FontAwesomeIcons.whatsapp),
-              iconSize: 60,
-              color: Colors.green.shade800,
-              onPressed:
-                  _toLaunch != null
-                      ? () => setState(() {
-                        _launchInBrowser(_toLaunch!);
-                      })
-                      : null,
-            ),
-          ],
+                ],
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.qr_code),
+                    iconSize: 60,
+                    color: Colors.green.shade800,
+                    onPressed:
+                        _uri != null
+                            ? () {
+                              // Add functionality to generate or display QR code here
+                            }
+                            : null,
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.share),
+                    iconSize: 60,
+                    color: Colors.green.shade800,
+                    onPressed:
+                        _uri != null
+                            ? () {
+                              final params = ShareParams(uri: _uri);
+                              SharePlus.instance.share(params);
+                            }
+                            : null,
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const FaIcon(FontAwesomeIcons.whatsapp),
+                    iconSize: 60,
+                    color: Colors.green.shade800,
+                    onPressed:
+                        _uri != null ? () => _launchInBrowser(_uri!) : null,
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _uri != null
+                      ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          InkWell(
+                            onTap:
+                                _uri != null
+                                    ? () => _launchInBrowser(_uri!)
+                                    : null,
+                            child: Text(
+                              _uri.toString(),
+                              style: TextStyle(
+                                fontSize: 20,
+                                decoration: TextDecoration.underline,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green.shade800,
+                              ),
+                            ),
+                          ),
+                          // const SizedBox(width: 8),
+                          IconButton(
+                            icon: const Icon(Icons.copy),
+                            iconSize: 22,
+                            color: Colors.green.shade800,
+                            onPressed: () {
+                              if (_uri != null) {
+                                Clipboard.setData(
+                                  ClipboardData(text: _uri.toString()),
+                                );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Link copiado!'),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                        ],
+                      )
+                      : const Text(''),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
