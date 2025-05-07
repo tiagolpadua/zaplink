@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -131,7 +132,39 @@ class _ZapLinkPageState extends State<ZapLinkPage> {
                     onPressed:
                         _uri != null
                             ? () {
-                              // Add functionality to generate or display QR code here
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    content: SizedBox(
+                                      width: 200,
+                                      height: 200,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          QrImageView(
+                                            data:
+                                                _uri.toString(), // URL convertida em QR Code
+                                            version: QrVersions.auto,
+                                            size: 200.0,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    // actions: [
+                                    //   TextButton(
+                                    //     onPressed: () {
+                                    //       Navigator.of(
+                                    //         context,
+                                    //       ).pop(); // Fecha a modal
+                                    //     },
+                                    //     child: const Text('Fechar'),
+                                    //   ),
+                                    // ],
+                                  );
+                                },
+                              );
                             }
                             : null,
                   ),
